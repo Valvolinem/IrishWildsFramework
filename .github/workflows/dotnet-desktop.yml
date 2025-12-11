@@ -53,10 +53,13 @@ jobs:
         configuration: [Release] 
 
     env:
-      Test_Project_Path: Valvolinem/IrishWildsFramework
+      Test_Project_Path: PlaywrightFramework.csproj
       DotNet_Version: 8.0.x 
       
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v4
       with:
