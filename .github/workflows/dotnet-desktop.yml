@@ -65,11 +65,11 @@ jobs:
       with:
         dotnet-version: ${{ env.DotNet_Version }}
         
-    - name: Download Build Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifact-${{ matrix.configuration }}
-        path: ${{ github.workspace }}/build-output
+    - name: Restore Dependencies
+      run: dotnet restore PlaywrightFramework.sln
+      
+    - name: Build Solution
+      run: dotnet build PlaywrightFramework.sln --configuration ${{ matrix.configuration }} --no-restore
         
     - name: Execute Tests and Generate Report
       run: dotnet test ${{ env.Test_Project_Path }} --configuration ${{ matrix.configuration }} --no-build --logger trx --results-directory ${{ github.workspace }}/TestResults
