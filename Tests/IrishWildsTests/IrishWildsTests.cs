@@ -19,25 +19,25 @@ namespace PlaywrightTests.Tests
         {
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            await gamePage.ControlsBottom.IsVisible();
-            await gamePage.IncreaseStake(6);
-            await gamePage.PerformSpin();
-            var balanceAfterStake = await gamePage.GetBalance();
-            await gamePage.WaitForSpinAnimationComplete();
-            var noWin = await gamePage.GetWin();
-            Assert.AreEqual(0.0m, noWin);
-            var balanceAfterLosingSpin = await gamePage.GetBalance();
-            Assert.AreEqual(balanceAfterStake, balanceAfterLosingSpin);
+            await game.ControlsBottom.IsVisible();
+            await game.IncreaseStake(6);
+            await game.PerformSpin();
+            var balBefore = await game.GetBalance();
+            await game.WaitForSpinAnimationComplete();
+            var win = await game.GetWin();
+            Assert.AreEqual(0.0m, win);
+            var balAfter = await game.GetBalance();
+            Assert.AreEqual(balBefore, balAfter);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace PlaywrightTests.Tests
         [Category("Game")]
         public async Task VerifyErrorHandlingOn501Response()
         {
-            var errorMessage = "505 Internal Server Error.";
+            var errMsg = "505 Internal Server Error.";
             // Intercept and return 501 error response
             await Page.RouteAsync("**/Client/LoadGame", async route =>
             {
@@ -61,8 +61,8 @@ namespace PlaywrightTests.Tests
 
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.VerifyErrorMessage(errorMessage);
+            var introPage = new IntroGamePage(Page);
+            await introPage.VerifyErrorMessage(errMsg);
         }
 
         /// <summary>
@@ -73,8 +73,8 @@ namespace PlaywrightTests.Tests
         [Description("Verify that user is winning on single run - with mocked API response BIG WIN")]
         public async Task WinSingleSpinBigWinMock()
         {
-            var finalBalance = 800001985.00m;
-            var winAmount = 8000.0m;
+            var expectedBal = 800001985.00m;
+            var expectedWin = 8000.0m;
             // Setup API mock before navigating
             await MocksHelper.SetupCollectWinMock(Page);
 
@@ -82,28 +82,28 @@ namespace PlaywrightTests.Tests
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
             // Load and play game
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            var balanceBeforeSpin = await gamePage.GetBalance();
+            var balBefore = await game.GetBalance();
 
-            await gamePage.PerformSpin();
+            await game.PerformSpin();
 
-            await gamePage.WaitForSpinAnimationComplete();
+            await game.WaitForSpinAnimationComplete();
 
-            var balanceAfterSpin = await gamePage.GetBalance();
+            var balAfter = await game.GetBalance();
 
-            var winAmountAfterSpin = await gamePage.ControlsTop.WinDisplay.GetAmountDecimal();
-            Assert.AreEqual(winAmount, winAmountAfterSpin);
-            Assert.AreEqual(finalBalance, balanceAfterSpin);
-            Assert.AreNotEqual(balanceBeforeSpin, balanceAfterSpin, "Balance should be updated after win collection");
+            var win = await game.ControlsTop.WinDisplay.GetAmountDecimal();
+            Assert.AreEqual(expectedWin, win);
+            Assert.AreEqual(expectedBal, balAfter);
+            Assert.AreNotEqual(balBefore, balAfter, "Balance should be updated after win collection");
         }
 
         [Test]
@@ -113,29 +113,29 @@ namespace PlaywrightTests.Tests
         {
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            await gamePage.ClickAutoplay();
-            await gamePage.ClickPlusStakeAuto(10);
+            await game.ClickAutoplay();
+            await game.ClickPlusStakeAuto(10);
 
-            await gamePage.ClickAutoplayStartButton();
+            await game.ClickAutoplayStartButton();
 
-            var balanceAfterStake = await gamePage.GetBalance();
-            Assert.AreEqual(balanceAfterStake, 1975.00m);
-            var (actionRequest, actionRequestBody) = await PlaywrightHelpers.WaitForRequest(Page, "Client/Action", timeoutMs: 15000);
-            Assert.IsTrue(actionRequestBody.Contains("\"Stake\":25"),
+            var balBefore = await game.GetBalance();
+            Assert.AreEqual(balBefore, 1975.00m);
+            var (req, reqBody) = await PlaywrightHelpers.WaitForRequest(Page, "Client/Action", timeoutMs: 15000);
+            Assert.IsTrue(reqBody.Contains("\"Stake\":25"),
                 "Request body should contain 'Stake':25");
             await PlaywrightHelpers.WaitForElement(Page, AppConstants.Selectors.MessageDialog);
-            var balanceAfterSpin = await gamePage.GetBalance();
-            Assert.AreNotEqual(balanceAfterSpin, balanceAfterStake);
+            var balAfter = await game.GetBalance();
+            Assert.AreNotEqual(balAfter, balBefore);
         }
 
         [Test]
@@ -143,35 +143,35 @@ namespace PlaywrightTests.Tests
         [Description("Run a spin with different culture and verify labels")]
         public async Task VerifyGameLocalizationBG()
         {
-            var bgBalanceLabel = "БАЛАНС";
-            var bgWinLabel = "ПЕЧАЛБА";
+            var balLabel = "БАЛАНС";
+            var winLabel = "ПЕЧАЛБА";
             var culture = "BG";
-            var featureTextBG = "ФУНКЦИЯ ЗА ЗАКУПУВАНЕ";
+            var featureLabel = "ФУНКЦИЯ ЗА ЗАКУПУВАНЕ";
 
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94, culture));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            await gamePage.ControlsTop.BalanceDisplay.VerifyDisplayLabel(bgBalanceLabel);
-            await gamePage.ControlsTop.WinDisplay.VerifyDisplayLabel(bgWinLabel);
-            await gamePage.ControlsBottom.FeatureButtons.VerifyBuyFeatureLabel(featureTextBG);
+            await game.ControlsTop.BalanceDisplay.VerifyDisplayLabel(balLabel);
+            await game.ControlsTop.WinDisplay.VerifyDisplayLabel(winLabel);
+            await game.ControlsBottom.FeatureButtons.VerifyBuyFeatureLabel(featureLabel);
 
-            await gamePage.IncreaseStake(4);
-            await gamePage.PerformSpin();
-            var balanceAfter1Spin = await gamePage.GetBalance();
-            await gamePage.WaitForSpinAnimationComplete();
-            var winAmount = await gamePage.GetWin();
-            var expectedBalance = balanceAfter1Spin + winAmount;
-            var finalBalance = await gamePage.GetBalance();
-            Assert.AreEqual(finalBalance, expectedBalance, "Balance should be updated by the win amount");
+            await game.IncreaseStake(4);
+            await game.PerformSpin();
+            var bal1 = await game.GetBalance();
+            await game.WaitForSpinAnimationComplete();
+            var win = await game.GetWin();
+            var expectedBal = bal1 + win;
+            var finalBal = await game.GetBalance();
+            Assert.AreEqual(finalBal, expectedBal, "Balance should be updated by the win amount");
         }
 
         [Test]
@@ -181,31 +181,31 @@ namespace PlaywrightTests.Tests
         {
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            await gamePage.ClickBuyFeature();
-            await gamePage.ControlsBottom.FeatureButtons.ClickBuy();
-            await gamePage.ControlsBottom.FeatureButtons.WaitForBanner(AppConstants.Texts.CongratulationsText, AppConstants.Texts.WonText, true);
-            await gamePage.ControlsBottom.FeatureButtons.ClickBannerStartBtn();
-            var balanceAfterBuying = await gamePage.GetBalance();
-            await gamePage.ControlsBottom.FeatureButtons.FreeGamesIndicatorIsVisible();
-            await gamePage.ControlsBottom.FeatureButtons.WaitForBanner(AppConstants.Texts.CongratulationsText, AppConstants.Texts.WonText);
-            await gamePage.ControlsBottom.FeatureButtons.WaitForBannerToDisappear();
+            await game.ClickBuyFeature();
+            await game.ControlsBottom.FeatureButtons.ClickBuy();
+            await game.ControlsBottom.FeatureButtons.WaitForBanner(AppConstants.Texts.CongratulationsText, AppConstants.Texts.WonText, true);
+            await game.ControlsBottom.FeatureButtons.ClickBannerStartBtn();
+            var balAfterBuy = await game.GetBalance();
+            await game.ControlsBottom.FeatureButtons.FreeGamesIndicatorIsVisible();
+            await game.ControlsBottom.FeatureButtons.WaitForBanner(AppConstants.Texts.CongratulationsText, AppConstants.Texts.WonText);
+            await game.ControlsBottom.FeatureButtons.WaitForBannerToDisappear();
 
-            var winAmount = await gamePage.GetWin();
-            var expectedBalance = balanceAfterBuying + winAmount;
-            var finalBalance = await gamePage.GetBalance();
+            var win = await game.GetWin();
+            var expectedBal = balAfterBuy + win;
+            var finalBal = await game.GetBalance();
 
-            Assert.AreEqual(finalBalance, expectedBalance, "Balance should be updated by the win amount");
-            Assert.AreNotEqual(0.0m, winAmount, "Win amount should not be zero");
+            Assert.AreEqual(finalBal, expectedBal, "Balance should be updated by the win amount");
+            Assert.AreNotEqual(0.0m, win, "Win amount should not be zero");
         }
 
         [Test]
@@ -216,27 +216,27 @@ namespace PlaywrightTests.Tests
             var stake = 5;
             await Navigate(PlaywrightHelpers.GetGameUrl(GameType.IrishWilds94));
 
-            var introGamePage = new IntroGamePage(Page);
-            await introGamePage.WaitForProgressBarComplete();
-            await introGamePage.AssertPlayButtonVisibleAndClickable();
-            await introGamePage.PlayButton.ClickAsync();
+            var introPage = new IntroGamePage(Page);
+            await introPage.WaitForProgressBarComplete();
+            await introPage.AssertPlayButtonVisibleAndClickable();
+            await introPage.PlayButton.ClickAsync();
 
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            var gamePage = new GamePage(Page);
-            await gamePage.WaitForGameLoad();
+            var game = new GamePage(Page);
+            await game.WaitForGameLoad();
 
-            await gamePage.IncreaseStake(4);
-            await gamePage.PerformSpin();
-            var balanceAfter1Spin = await gamePage.GetBalance();
-            await gamePage.WaitForSpinAnimationComplete();
-            var firstWinAmount = await gamePage.GetWin();
-            await gamePage.PerformSpin();
-            await gamePage.WaitForSpinAnimationComplete();
-            var secondWinAmount = await gamePage.GetWin();
-            var ExpectedFinalBalance = balanceAfter1Spin + secondWinAmount + firstWinAmount - stake;
-            var FinalBalance = await gamePage.GetBalance();
-            Assert.AreEqual(FinalBalance, ExpectedFinalBalance, "Balance should be updated by the win amount");
+            await game.IncreaseStake(4);
+            await game.PerformSpin();
+            var bal1 = await game.GetBalance();
+            await game.WaitForSpinAnimationComplete();
+            var win1 = await game.GetWin();
+            await game.PerformSpin();
+            await game.WaitForSpinAnimationComplete();
+            var win2 = await game.GetWin();
+            var expectedBal = bal1 + win2 + win1 - stake;
+            var finalBal = await game.GetBalance();
+            Assert.AreEqual(finalBal, expectedBal, "Balance should be updated by the win amount");
         }
     }
 }
