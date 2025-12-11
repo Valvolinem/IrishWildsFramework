@@ -20,10 +20,10 @@ The GitHub Actions workflow pipeline is located at:
 - **.github/workflows/dotnet-desktop.yml** - Automated build and test pipeline
 
 This workflow runs on pushes and pull requests to the main branch, performing:
-- Build the solution with .NET 8.0
-- Publish build artifacts
-- Execute automated tests
-- Generate test results
+- Restore dependencies and build the solution with .NET 8.0
+- Publish and upload build artifacts
+- Execute automated tests using the build artifacts
+- Upload test results
 
 ## Prerequisites
 - .NET 8.0 SDK or later
