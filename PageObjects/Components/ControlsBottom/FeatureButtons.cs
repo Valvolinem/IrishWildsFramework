@@ -73,9 +73,9 @@ namespace PlaywrightTests.PageObjects.Components.ControlsBottom
             Assert.IsTrue(isVisible, "Free games element should be visible");
         }
 
-        public async Task WaitForBannerToDisappear()
+        public async Task WaitForBannerToDisappear(int timeoutMs = 15000)
         {
-            await _page.WaitForSelectorAsync(".banner__container", new PageWaitForSelectorOptions { State = WaitForSelectorState.Hidden });
+            await _page.WaitForSelectorAsync(".banner__container", new PageWaitForSelectorOptions { State = WaitForSelectorState.Hidden, Timeout = timeoutMs });
         }
 
         public async Task VerifyBuyFeatureLabel(string expectedLabel)
