@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Parallel test execution settings -->
+  <RunConfiguration>
+    <!-- Number of workers for parallel execution (matches BrowserPool max size of 3) -->
+    <MaxCpuCount>3</MaxCpuCount>
+    <DisableParallelization>false</DisableParallelization>
+  </RunConfiguration>
+
+  <!-- NUnit specific settings -->
+  <NUnit>
+    <!-- Run tests in parallel at assembly level (3 workers for 3 browser pool size) -->
+    <NumberOfTestWorkers>3</NumberOfTestWorkers>
+  </NUnit>
+</RunSettings>
