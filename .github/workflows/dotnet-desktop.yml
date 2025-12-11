@@ -70,7 +70,10 @@ jobs:
       
     - name: Build Solution
       run: dotnet build PlaywrightFramework.sln --configuration ${{ matrix.configuration }} --no-restore
-        
+      
+    - name: Install Playwright Browsers
+      run: pwsh bin/Debug/net8.0/playwright.ps1 install
+      
     - name: Execute Tests and Generate Report
       run: dotnet test ${{ env.Test_Project_Path }} --configuration ${{ matrix.configuration }} --no-build --logger trx --results-directory ${{ github.workspace }}/TestResults
       
