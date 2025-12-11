@@ -15,6 +15,16 @@ Automated browser testing framework for slot game applications using Playwright 
 - **Constants/** - Application constants
 - **Data/** - Test data and mock responses
 
+## CI/CD Pipeline
+The GitHub Actions workflow pipeline is located at:
+- **.github/workflows/dotnet-desktop.yml** - Automated build and test pipeline
+
+This workflow runs on pushes and pull requests to the main branch, performing:
+- Restore dependencies and build the solution with .NET 8.0
+- Publish and upload build artifacts
+- Execute automated tests using the build artifacts
+- Upload test results
+
 ## Prerequisites
 - .NET 8.0 SDK or later
 - Visual Studio Code
