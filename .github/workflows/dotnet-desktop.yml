@@ -1,0 +1,79 @@
+name: Project Build and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        configuration: [Release] 
+
+    env:
+      Solution_Name: PlaywrightFramework.sln
+      DotNet_Version: 8.0.x 
+      
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DotNet_Version }}
+
+    - name: Restore Dependencies
+      run: dotnet restore ${{ env.Solution_Name }}
+
+    - name: Build Solution
+      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --no-restore
+      
+    - name: Publish Build Output
+      run: dotnet publish ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} -o ${{ github.workspace }}/build-output --no-build
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifact-${{ matrix.configuration }}
+        path: ${{ github.workspace }}/build-output
+
+  test:
+    needs: [build] 
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        configuration: [Release] 
+
+    env:
+      Test_Project_Path: Valvolinem/IrishWildsFramework
+      DotNet_Version: 8.0.x 
+      
+    steps:
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DotNet_Version }}
+        
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifact-${{ matrix.configuration }}
+        path: ${{ github.workspace }}/build-output
+        
+    - name: Execute Tests and Generate Report
+      run: dotnet test ${{ env.Test_Project_Path }} --configuration ${{ matrix.configuration }} --no-build --logger trx --results-directory ${{ github.workspace }}/TestResults
+      
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.configuration }}
+        path: ${{ github.workspace }}/TestResults
